@@ -255,20 +255,32 @@ void printasolution(State goal){
 int main() {
     cin>>n;
     State Initial(n,n,0);
-
     State Final(n,n,1);
-   // cout<<Final<<endl;
+
     Solution solution;
+
+
     cout<<"Solution with bfs :"<<endl;
+    clock_t begin = clock();
+
+    solution.Setting();
     solution.solutionwithbfs(Initial,Final);
     solution.printasolution(Final);
 
-    cout<<"Solution with dfs :"<<endl;
-    solution.Setting();
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    cout<<"Time needed for solution with bfs : "<<elapsed_secs<<endl<<endl;
 
+    cout<<"Solution with dfs :"<<endl;
+    begin = clock();
+
+    solution.Setting();
     solution.solutionwithdfs(Initial,Initial,Final);
     solution.printasolution(Final);
 
+    end = clock();
+    elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    cout<<"Time needed for solution with dfs : "<<elapsed_secs<<endl;
 
     return 0;
 }
