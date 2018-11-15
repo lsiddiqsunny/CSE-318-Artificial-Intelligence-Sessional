@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 int n;
-int now;
+
 class State{
 
     int missionaries; //number of missionaries
@@ -35,8 +35,7 @@ public:
 
         if(s.getCannibals()>n||s.getMissionaries()>n||s.getCannibals()<0||s.getMissionaries()<0) return false;
         if(s.getMissionaries()<s.getCannibals() && s.getMissionaries()!=0) return false;
-        if((n-s.getMissionaries())<(n-s.getCannibals()) && (n-s.getMissionaries())!=0) return  false;
-        return true;
+        return !((n - s.getMissionaries()) < (n - s.getCannibals()) && (n - s.getMissionaries()) != 0);
 
 
     }
@@ -75,10 +74,7 @@ public:
 
 
     bool operator ==(const State& state) {
-        if(missionaries != state.missionaries || cannibals!=state.cannibals || current_side!=state.current_side) {
-            return false;
-        }
-        return true;
+        return !(missionaries != state.missionaries || cannibals != state.cannibals || current_side != state.current_side);
     }
 
     State operator =(const State& state) {
@@ -93,7 +89,7 @@ public:
     bool operator <(const State& state) {
         if(missionaries<=state.missionaries) return true;
         else if(cannibals<=state.cannibals) return true;
-        else if(current_side==state.current_side) return true;
+        else if(state.current_side == current_side) return true;
         else return  false;
     }
     friend ostream& operator<<(ostream& os, const State& state);
@@ -157,8 +153,8 @@ public:
     }
 
     bool checkvisited(State s){
-        for(int i=0;i<vis.size();i++){
-            if(vis[i]==s){
+        for (auto vi : vis) {
+            if(vi ==s){
                 return true;
             }
         }
@@ -166,9 +162,9 @@ public:
 
     }
     State getParent(State s){
-        for(int i=0;i<parent.size();i++){
-            if(parent[i].first==s){
-                return parent[i].second;
+        for (auto i : parent) {
+            if(i.first==s){
+                return i.second;
             }
         }
 
@@ -192,11 +188,11 @@ public:
                 break;
             }
             vector<State> children=u.getChildren();
-            for(int i=0;i<children.size();i++){
-                if(!checkvisited(children[i])){
-                    vis.push_back(children[i]);
-                    q.push(children[i]);
-                    parent.push_back(make_pair(children[i],u));
+            for (auto i : children) {
+                if(!checkvisited(i)){
+                    vis.push_back(i);
+                    q.push(i);
+                    parent.push_back(make_pair(i,u));
 
                 }
             }
@@ -223,7 +219,7 @@ void printasolution(State goal){
 
     }
 
-    while(path.size()!=0){
+    while(!path.empty()){
         cout<<path.top()<<endl;
         path.pop();
     }
@@ -237,15 +233,11 @@ void printasolution(State goal){
         parent.push_back(make_pair(start,par));
         if(start==goal) return;
         vector<State>children=start.getChildren();
-        for(int i=0;i<children.size();i++){
-            if(!checkvisited(children[i])){
-                solutionwithdfs(children[i],start,goal);
+        for (const auto i : children) {
+            if(!checkvisited(i)){
+                solutionwithdfs(i,start,goal);
             }
         }
-        return;
-
-
-
 
 
     }
@@ -265,7 +257,9 @@ int main() {
 
     solution.Setting();
     solution.solutionwithbfs(Initial,Final);
+    if(solution.checkvisited(Final))
     solution.printasolution(Final);
+    else cout<<"No solution"<<endl;
 
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -276,7 +270,10 @@ int main() {
 
     solution.Setting();
     solution.solutionwithdfs(Initial,Initial,Final);
-    solution.printasolution(Final);
+    if(solution.checkvisited(Final))
+        solution.printasolution(Final);
+    else cout<<"No solution"<<endl;
+
 
     end = clock();
     elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
