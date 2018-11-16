@@ -1,19 +1,26 @@
 #include <bits/stdc++.h>
 using namespace std;
-int n;
+
 
 class State{
 
     int missionaries; //number of missionaries
     int cannibals; //number of cannibals
     int  current_side; //the side of the boat, 0 for left side and 1 for right  side
+    int n;
+    int m;
+    int k;
+
 public:
 
-    State(int x,int y,int z){
+    State(int x,int y,int z,int a,int b,int c){
 
         missionaries=x;
         cannibals=y;
         current_side=z;
+        n=a;
+        m=b;
+        k=c;
 
     }
 
@@ -33,38 +40,27 @@ public:
 
     bool ValidState(State s){
 
-        if(s.getCannibals()>n||s.getMissionaries()>n||s.getCannibals()<0||s.getMissionaries()<0) return false;
+        if(s.getCannibals()>m||s.getMissionaries()>n||s.getCannibals()<0||s.getMissionaries()<0) return false;
         if(s.getMissionaries()<s.getCannibals() && s.getMissionaries()!=0) return false;
-        return !((n - s.getMissionaries()) < (n - s.getCannibals()) && (n - s.getMissionaries()) != 0);
+        return !((n - s.getMissionaries()) < (m - s.getCannibals()) && (n - s.getMissionaries()) != 0);
 
 
     }
     vector<State> getChildren(){
         vector<State>children;
         int missionaries_on_other_side=n-this->missionaries;
-        int cannibals_on_other_side=n-this->cannibals;
+        int cannibals_on_other_side=m-this->cannibals;
         int new_side=1-current_side;
+        for(int i=0;i<=min(k,n);i++){
+            for(int j=0;j<=max(0,(k-i));j++){
+                if(i==0 and j==0) continue;
+                State s(missionaries_on_other_side+i,cannibals_on_other_side+j,new_side,n,m,k);
+                if(ValidState(s)){
+                    children.push_back(s);
+                }
+            }
+        }
 
-        State case1(missionaries_on_other_side+2,cannibals_on_other_side,new_side);
-        if(ValidState(case1)){
-            children.push_back(case1);
-        }
-        State case2(missionaries_on_other_side,cannibals_on_other_side+2,new_side);
-        if(ValidState(case2)){
-            children.push_back(case2);
-        }
-        State case3(missionaries_on_other_side+1,cannibals_on_other_side,new_side);
-        if(ValidState(case3)){
-            children.push_back(case3);
-        }
-        State case4(missionaries_on_other_side,cannibals_on_other_side+1,new_side);
-        if(ValidState(case4)){
-            children.push_back(case4);
-        }
-        State case5(missionaries_on_other_side+1,cannibals_on_other_side+1,new_side);
-        if(ValidState(case5)){
-            children.push_back(case5);
-        }
         return children;
 
 
@@ -81,7 +77,7 @@ public:
         missionaries=state.missionaries;
         cannibals=state.cannibals;
         current_side=state.current_side;
-        State newstate(state.missionaries,state.cannibals,state.current_side);
+        State newstate(state.missionaries,state.cannibals,state.current_side,state.n,state.m,state.k);
         return newstate;
     }
 
@@ -108,19 +104,19 @@ ostream& operator<<(ostream& os, const State& state)
             os<<"C";
         }
         os<<" B------- ";
-        for(int i=0;i<n-state.missionaries;i++){
+        for(int i=0;i<state.n-state.missionaries;i++){
             os<<"M";
         }
-        for(int i=0;i<n-state.cannibals;i++){
+        for(int i=0;i<state.m-state.cannibals;i++){
             os<<"C";
         }
 
     }
     else {
-        for(int i=0;i<n-state.missionaries;i++){
+        for(int i=0;i<state.n-state.missionaries;i++){
             os<<"M";
         }
-        for(int i=0;i<n-state.cannibals;i++){
+        for(int i=0;i<state.m-state.cannibals;i++){
             os<<"C";
         }
         os<<" -------B ";
@@ -141,8 +137,17 @@ class Solution{
     vector<pair<State,State> > parent;
     vector<State>vis;
     stack<State>path;
+    int missonaries;
+    int cannibals;
+    int passenger;
+
 public:
 
+    Solution(int m,int c,int k){
+        missonaries=m;
+        cannibals=c;
+        passenger=k;
+    }
 
     void Setting(){
         while(!q.empty()) q.pop();
@@ -170,8 +175,30 @@ public:
 
 
     }
+    void solutionwithbfs(){
 
-    void solutionwithbfs(State start,State goal){
+
+        cout<<"Solution with bfs :"<<endl;
+        clock_t begin = clock();
+        State Initial(missonaries,cannibals,0,missonaries,cannibals,passenger);
+        State Final(missonaries,cannibals,1,missonaries,cannibals,passenger);
+
+        Setting();
+        bfs(Initial,Final);
+        if(checkvisited(Final))
+            printasolution(Final);
+        else cout<<"No solution"<<endl;
+
+        clock_t end = clock();
+        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+        cout<<"Number of explored nodes : "<<explorednode()<<endl;
+        cout<<"Time needed for solution with bfs : "<<elapsed_secs<<endl<<endl;
+
+
+
+    }
+
+    void bfs(State start,State goal){
 
 
        Setting();
@@ -196,6 +223,7 @@ public:
 
                 }
             }
+            if(vis.size()>=1000000) break;
 
         }
 
@@ -225,17 +253,43 @@ void printasolution(State goal){
     }
 }
 
+    int explorednode(){
+        return vis.size();
+    }
+    void solutionwithdfs(){
+
+        State Initial(missonaries,cannibals,0,missonaries,cannibals,passenger);
+        State Final(missonaries,cannibals,1,missonaries,cannibals,passenger);
+
+        cout<<"Solution with dfs :"<<endl;
+        clock_t begin = clock();
+
+        Setting();
+        dfs(Initial,Initial,Final);
+        if(checkvisited(Final))
+            printasolution(Final);
+        else cout<<"No solution"<<endl;
 
 
-    void solutionwithdfs(State start,State par,State goal){
+        clock_t end = clock();
+        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+        cout<<"Number of explored nodes : "<<explorednode()<<endl;
+        cout<<"Time needed for solution with dfs : "<<elapsed_secs<<endl;
+
+
+    }
+
+
+    void dfs(State start,State par,State goal){
 
         vis.push_back(start);
+        if(vis.size()>=1000000) return;
         parent.push_back(make_pair(start,par));
         if(start==goal) return;
         vector<State>children=start.getChildren();
         for (const auto i : children) {
             if(!checkvisited(i)){
-                solutionwithdfs(i,start,goal);
+                dfs(i,start,goal);
             }
         }
 
@@ -245,39 +299,18 @@ void printasolution(State goal){
 
 
 int main() {
-    cin>>n;
-    State Initial(n,n,0);
-    State Final(n,n,1);
+    int m,c,k;
+    cin>>m>>c>>k;
 
-    Solution solution;
-
-
-    cout<<"Solution with bfs :"<<endl;
-    clock_t begin = clock();
-
-    solution.Setting();
-    solution.solutionwithbfs(Initial,Final);
-    if(solution.checkvisited(Final))
-    solution.printasolution(Final);
-    else cout<<"No solution"<<endl;
-
-    clock_t end = clock();
-    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-    cout<<"Time needed for solution with bfs : "<<elapsed_secs<<endl<<endl;
-
-    cout<<"Solution with dfs :"<<endl;
-    begin = clock();
-
-    solution.Setting();
-    solution.solutionwithdfs(Initial,Initial,Final);
-    if(solution.checkvisited(Final))
-        solution.printasolution(Final);
-    else cout<<"No solution"<<endl;
+    State s(m,c,0,m,c,k);
+    vector<State>ch=s.getChildren();
 
 
-    end = clock();
-    elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-    cout<<"Time needed for solution with dfs : "<<elapsed_secs<<endl;
+    Solution solution(m,c,k);
+
+    solution.solutionwithbfs();
+    solution.solutionwithdfs();
+
 
     return 0;
 }
