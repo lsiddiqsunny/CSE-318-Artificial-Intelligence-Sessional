@@ -21,13 +21,13 @@ public:
     Node(vector<int>v,Node* par)
     {
         parent=par;
-        board=v;
+        this->board=v;
         priority=0;
     }
     Node(vector<int>v)
     {
         parent=NULL;
-        board=v;
+        this->board=v;
         priority=0;
     }
     Node(const Node &node)
@@ -79,7 +79,7 @@ public:
 
     ~Node()
     {
-       // delete  parent;
+        // delete  parent;
         parent=NULL;
     }
 };
@@ -150,6 +150,7 @@ vector<Node> getchildren(Node node)
     vector<int>x;
     int nowx=pos.first,nowy=pos.second;
     Node *par=new Node(node);
+    //cout<<*par;
     for(int i=0; i<4; i++)
     {
         x.clear();
@@ -167,9 +168,9 @@ vector<Node> getchildren(Node node)
 
     }
     //cout<<*(children[0].getParent());
-    for(int i=0;i<children.size();i++){
+    /*for(int i=0;i<children.size();i++){
         cout<<children[i];
-    }
+    }*/
 
     return children;
 
@@ -198,13 +199,14 @@ void solve(Node start,Node goal)
 {
 
     //map<Node,int,Comp>mp;
+    int expanded_node=0;
     priority_queue<Node,vector<Node>,Comp >q;
     start.setpriority(0);
     q.push(start);
     while(!q.empty())
     {
         Node x=q.top();
-      //  cout<<x;cout<<x.getpriority()<<endl;
+        //  cout<<x;cout<<x.getpriority()<<endl;
 
         q.pop();
         if(x==goal) {goal=x;break;}
@@ -214,16 +216,35 @@ void solve(Node start,Node goal)
         for(int i=0;i<children.size();i++){
             Node y=children[i];
             if(!inclosedlist(y)){
+                expanded_node++;
                 q.push(y);
+                // cout<<*y.getParent();
             }
         }
 
 
     }
-    cout<<goal.getpriority()<<endl;
-   // printsolution(goal);
+    //cout<<goal.getpriority()<<endl;
+    // printsolution(goal);
+    stack<Node>path;
+    path.push(goal);
+    while(goal.getParent()){
+        goal=*goal.getParent();
+        //cout<<goal;
+        path.push(goal);
+        // cout<<path.top();
 
-    //cout<<"solution found"<<endl;
+    }
+    // cout<<path.size()<<endl;
+    int path_size=path.size();
+    while(!path.empty()){
+        Node x=path.top();
+        path.pop();
+        cout<<x<<endl;
+    }
+     cout<<"Steps for the solutions : "<<path_size<<endl;
+    cout<<"Explored Node : "<<closedlist.size()<<endl;
+    cout<<"Expanded Node : "<<expanded_node<<endl;
 
 
 
@@ -231,21 +252,25 @@ void solve(Node start,Node goal)
 
 ostream& operator<<(ostream& os, const Node& node)
 {
-    for(int i=0; i<n; i++)
-    {
-        for(int j=0; j<n; j++)
+    if(node.board.size()==(n*n)) {
+        for(int i=0; i<n; i++)
         {
-
-            int pos=n*i+j;
-            if(node.board[pos]==-1)
+            for(int j=0; j<n; j++)
             {
-                cout<<"  ";
+
+                int pos=n*i+j;
+                if(node.board[pos]==-1)
+                {
+                    os<<"  ";
+                }
+                else
+                    os<<node.board[pos]<<" ";
             }
-            else
-                cout<<node.board[pos]<<" ";
+            os<<endl;
         }
-        cout<<endl;
     }
+    return os;
+
 }
 
 
