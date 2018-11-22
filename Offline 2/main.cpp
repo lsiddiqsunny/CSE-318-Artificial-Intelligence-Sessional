@@ -65,6 +65,13 @@ public:
     {
         return parent;
     }
+    bool operator==(const Node& node){
+        for(int i=0;i<board.size();i++){
+            if(board[i]!=node.board[i]) return  false;
+        }
+        return true;
+    }
+
 
 
 
@@ -72,7 +79,7 @@ public:
 
     ~Node()
     {
-        delete  parent;
+       // delete  parent;
         parent=NULL;
     }
 };
@@ -160,10 +167,7 @@ vector<Node> getchildren(Node node)
 
     }
     //cout<<*(children[0].getParent());
-
-
-    for(int i=0; i<children.size(); i++)
-    {
+    for(int i=0;i<children.size();i++){
         cout<<children[i];
     }
 
@@ -172,20 +176,55 @@ vector<Node> getchildren(Node node)
 
 
 }
+vector<Node>closedlist;
+bool inclosedlist(Node x){
+    for(int i=0;i<closedlist.size();i++){
+        if(closedlist[i]==x) return true;
+    }
+    return  false;
+
+}
+
+void printsolution(Node x){
+    if(x.getParent()==NULL){
+
+        return ;
+    }
+    printsolution(*(x.getParent()));
+    cout<<x;
+
+}
 void solve(Node start,Node goal)
 {
 
+    //map<Node,int,Comp>mp;
     priority_queue<Node,vector<Node>,Comp >q;
     start.setpriority(0);
     q.push(start);
     while(!q.empty())
     {
         Node x=q.top();
+      //  cout<<x;cout<<x.getpriority()<<endl;
+
         q.pop();
+        if(x==goal) {goal=x;break;}
+        //mp[x]=1;
+        closedlist.push_back(x);
         vector<Node>children=getchildren(x);
+        for(int i=0;i<children.size();i++){
+            Node y=children[i];
+            if(!inclosedlist(y)){
+                q.push(y);
+            }
+        }
 
 
     }
+    cout<<goal.getpriority()<<endl;
+   // printsolution(goal);
+
+    //cout<<"solution found"<<endl;
+
 
 
 }
@@ -305,7 +344,9 @@ int main()
         }
         Node start(v);
         Node goal=GoalGenerator();
-        //cout<<start;
+        getchildren(start);
+//        cout<<start;
+//        cout<<goal;
         solve(start,goal);
 
     }
@@ -316,7 +357,10 @@ int main()
             cout<<"No solution for this board"<<endl;
             return 0;
         }
-
+        Node start(v);
+        Node goal=GoalGenerator();
+        //cout<<start;
+        solve(start,goal);
     }
 
 
