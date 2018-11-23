@@ -41,3 +41,7 @@ CTestTestfile.cmake
 *.out
 *.app
 
+# Extra
+*.xml
+*.name
+*.cbp
