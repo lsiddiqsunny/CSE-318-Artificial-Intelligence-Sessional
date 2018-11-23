@@ -45,3 +45,4 @@ CTestTestfile.cmake
 *.xml
 *.name
 *.cbp
+*.iml
