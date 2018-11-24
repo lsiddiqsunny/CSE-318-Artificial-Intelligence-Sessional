@@ -3,8 +3,8 @@ using namespace std;
 
 int n;
 
-int humming_distance(vector<int> board);
-
+int heuristic_cost(vector<int> board);
+int choise;
 class Node
 {
     vector<int> board;
@@ -54,7 +54,7 @@ public:
     }
     int h()
     {
-        return humming_distance(board);
+        return heuristic_cost(board);
 
     }
     vector<int>get_board()
@@ -84,26 +84,135 @@ public:
     }
 };
 
-int humming_distance(vector<int> board)
+int heuristic_cost(vector<int> board)
 {
-    int now=1;
-    int co=0;
-    for(int i=0; i<n; i++)
-    {
-        for(int j=0; j<n; j++)
-        {
-            int pos=i*n+j;
-            if(board[pos]==-1)
-                continue;
-            if(board[pos]!=now)
-            {
-                co++;
+    if(choise==1) {
+        int now = 1;
+        int co = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                int pos = i * n + j;
+                if (board[pos] == -1)
+                    continue;
+                if (board[pos] != now) {
+                    co++;
+                }
+                now++;
             }
-            now++;
         }
+        return co;
     }
-    return  co;
+    else if(choise==2){
+        int co=0;
+        int now ;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                int pos = i * n + j;
+                if (board[pos] == -1)
+                    continue;
 
+                now=board[pos];
+                int orgx,orgy=(now%n);
+                if(now%n==0){
+                    orgx=now/n;
+                }
+                else orgx=(now/n)+1;
+                if(orgy==0) orgy=n;
+                int nowx=i+1;
+                int nowy=j+1;
+               // cout<<now<<" "<<nowx<<" "<<nowy<<" "<<orgx<<" "<<orgy<<endl;
+                co+=abs(nowx-orgx)+abs(nowy-orgy);
+
+            }
+        }
+        return co;
+
+    }
+    else{
+        int co=0;
+        int now ;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                int pos = i * n + j;
+                if (board[pos] == -1)
+                    continue;
+
+                now=board[pos];
+                int orgx,orgy=(now%n);
+                if(now%n==0){
+                    orgx=now/n;
+                }
+                else orgx=(now/n)+1;
+                if(orgy==0) orgy=n;
+                int nowx=i+1;
+                int nowy=j+1;
+                // cout<<now<<" "<<nowx<<" "<<nowy<<" "<<orgx<<" "<<orgy<<endl;
+                co+=abs(nowx-orgx)+abs(nowy-orgy);
+
+            }
+        }
+        int linear_conflict=0;
+
+        for(int i=0;i<n;i++){
+            vector<int>v;
+            map<int,int>pos;
+            for(int j=0;j<n;j++){
+                int pos1 = i * n + j;
+                if (board[pos1] == -1)
+                    continue;
+                pos[board[pos1]]=j;
+            }
+            for(int j=n*i+1;j<n*i+1+n;j++){
+                v.push_back(j);
+            }
+            for(int k=0;k<v.size();k++){
+                if(pos.find(v[k])!=pos.end()){
+                    for(int l=k+1;l<v.size();l++){
+
+                        if(pos.find(v[l])!=pos.end()){
+                            int pos1=pos[v[l]];
+                            if(pos1<pos[v[k]]) linear_conflict++;
+                          //  cout<<v[k]<<" "<<v[l]<<endl;
+                        }
+                    }
+                }
+            }
+           // cout<<endl;
+
+        }
+        for(int i=0;i<n;i++){
+            vector<int>v;
+            map<int,int>pos;
+
+
+            for(int j=0;j<n;j++){
+                int pos1 = j * n + i;
+                if (board[pos1] == -1)
+                    continue;
+                pos[board[pos1]]=j;
+            }
+            int s=i+1;
+            for(int k=s;k<n*n;k=k+n){
+                v.push_back(k);
+            }
+            for(int k=0;k<v.size();k++){
+                if(pos.find(v[k])!=pos.end()){
+                    for(int l=k+1;l<v.size();l++){
+
+                        if(pos.find(v[l])!=pos.end()){
+                            int pos1=pos[v[l]];
+                            if(pos1<pos[v[k]]) linear_conflict++;
+                             // cout<<v[k]<<" "<<v[l]<<endl;
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        return co+2*linear_conflict;
+    }
 
 }
 
@@ -199,6 +308,7 @@ void solve(Node start,Node goal)
 {
 
     //map<Node,int,Comp>mp;
+    closedlist.clear();
     int expanded_node=0;
     priority_queue<Node,vector<Node>,Comp >q;
     start.setpriority(0);
@@ -241,6 +351,16 @@ void solve(Node start,Node goal)
         Node x=path.top();
         path.pop();
         cout<<x<<endl;
+    }
+    if(choise==1){
+        cout<<"Solution using Hamming distance : "<<endl;
+    }
+    else if(choise==2){
+        cout<<"Solution using Manhattan distance: "<<endl;
+    }
+    else{
+        cout<<"Solution using Linear Conflict: "<<endl;
+
     }
      cout<<"Steps for the solutions : "<<path_size<<endl;
     cout<<"Explored Node : "<<closedlist.size()<<endl;
@@ -372,7 +492,13 @@ int main()
         getchildren(start);
 //        cout<<start;
 //        cout<<goal;
+        choise=1;
         solve(start,goal);
+        choise=2;
+        solve(start,goal);
+        choise=3;
+        solve(start,goal);
+
 
     }
     else
@@ -384,7 +510,11 @@ int main()
         }
         Node start(v);
         Node goal=GoalGenerator();
-        //cout<<start;
+        choise=1;
+        solve(start,goal);
+        choise=2;
+        solve(start,goal);
+        choise=3;
         solve(start,goal);
     }
 
