@@ -116,7 +116,7 @@ int getNearestArc(int r)
     }
     return pos;
 }
-void NearestNeighbor()
+void NearestNeighbor(bool print)
 {
     Clear();
     int start=rand()%n+1;
@@ -129,7 +129,11 @@ void NearestNeighbor()
         tour.push_back(point[pos]);
     }
     tour.push_back(point[start]);
-    PrintSolution();
+    if(print)
+    {
+        cout<<"Solution by nearest neighbor heuristic:"<<endl;
+        PrintSolution();
+    }
 
 
 }
@@ -164,14 +168,195 @@ void NearestInsertion()
         }
     }
     tour.push_back(tour[0]);
-      PrintSolution();
+    cout<<"Solution by nearest insertion heuristic:"<<endl;
+
+    PrintSolution();
 
 
 }
+void CheapestInsertion()
+{
+    Clear();
+    int start=rand()%n+1;
+    visited[start]=1;
+    tour.push_back(point[start]);
+    int Next=getNearestNeighbor(point[start]);
+    visited[Next]=1;
+    tour.push_back(point[Next]);
+
+    while(tour.size()<n)
+    {
+        double cost=LLONG_MAX;
+        int x=-1;
+        int z=-1;
+///find the position where insertion is minimum
+        for(int edge=0; edge<tour.size(); edge++)
+        {
+            int xx=tour[edge].id;
+            int yy=tour[(edge+1)%tour.size()].id;
+            for(int node=1; node<=n; node++)
+            {
+                if(visited[node]==1)
+                    continue;
+                double dist=point[xx].dist(point[node])+point[yy].dist(point[node])-point[xx].dist(point[yy]);
+                if(dist<=cost)
+                {
+                    cost=dist;
+                    x=xx;
+                    z=node;
+                }
+
+            }
+        }
+        tour.push_back(point[z]);
+        visited[z]=1;
+
+        for(int i=tour.size()-2; i>=0; i--)
+        {
+            ///positioning the new node
+            if(tour[i]==point[x])
+                break;
+            swap(tour[i],tour[i+1]);
+        }
+    }
+    tour.push_back(tour[0]);
+    cout<<"Solution by cheapest insertion heuristic:"<<endl;
+
+    PrintSolution();
+}
+
+void TwoOpt()
+{
+    Clear();
+
+    NearestNeighbor(1);
+    while(true)
+    {
+        double cost=getTourCost();
+        bool isChanged=false;
+
+        for(int i=0; i<tour.size()-1; i++)
+        {
+            for(int j=i+2; j<tour.size()-1; j++)
+            {
+                ///reverse from i to k-1;
+                reverse(tour.begin()+i+1,tour.begin()+j+1);
+                double nowcost=getTourCost();
+                if(nowcost<cost)
+                {
+                    isChanged=true;
+                    break;
+                }
+                ///reverse again to fix the change
+                reverse(tour.begin()+i+1,tour.begin()+j+1);
+            }
+            if(isChanged)
+                break;
+        }
+        if(!isChanged)
+            break;
+    }
+    cout<<"Improved solution by 2-opt heuristic:"<<endl;
+    PrintSolution();
+}
+
+
+
+
+
+vector<Point> Operation(int i,int j,int k,int mask)
+{
+    bool Swap=mask&1;             //bit - 0
+    bool Reverse1=(mask>>1)&1;    //bit - 1
+    bool Reverse2=(mask>>2)&1;    //bit - 2
+
+    vector<Point>Now;
+    if(Reverse1)
+        reverse(tour.begin()+i+1,tour.begin()+j+1);
+    if(Reverse2)
+        reverse(tour.begin()+j+1,tour.begin()+k+1);
+
+    for(int x=0; x<=i; x++)
+        Now.push_back(tour[x]);
+    if(!Swap)
+    {
+        for(int x=i+1; x<=j; x++)
+            Now.push_back(tour[x]);
+        for(int x=j+1; x<=k; x++)
+            Now.push_back(tour[x]);
+    }
+    else
+    {
+        for(int x=j+1; x<=k; x++)
+            Now.push_back(tour[x]);
+        for(int x=i+1; x<=j; x++)
+            Now.push_back(tour[x]);
+    }
+    for(int x=k+1; x<n; x++)
+        Now.push_back(tour[x]);
+
+    if(Reverse1)
+        reverse(tour.begin()+i+1,tour.begin()+j+1);
+    if(Reverse2)
+        reverse(tour.begin()+j+1,tour.begin()+k+1);
+    Now.push_back(Now[0]);
+    return Now;
+}
+
+void ThreeOpt()
+{
+    Clear();
+
+    NearestNeighbor(1);
+    while(true)
+    {
+        double cost=getTourCost();
+        //cout<<cost<<endl;
+        bool isChanged=false;
+
+        for(int i=0; i<tour.size()-1; i++)
+        {
+            for(int j=i+2; j<tour.size()-1; j++)
+            {
+                for(int k=j+2; k<tour.size()-1; k++)
+                {
+                    for(int mask=1; mask<8; mask++)
+                    {
+                        vector<Point>Now=Operation(i,j,k,mask);
+                        double nowcost=0.0;
+                        for(int l=0; l<Now.size()-1; l++)
+                        {
+                            nowcost+=Now[l].dist(Now[l+1]);
+                        }
+                        if(nowcost<cost)
+                        {
+                            isChanged=true;
+                            tour=Now;
+                            break;
+                        }
+                    }
+                    if(isChanged)
+                        break;
+                }
+                if(isChanged)
+                    break;
+            }
+        }
+        if(!isChanged)
+            break;
+    }
+    cout<<"Improved solution by 3-opt heuristic:"<<endl;
+
+    PrintSolution();
+}
+
 void solution()
 {
-    NearestNeighbor();
+    NearestNeighbor(1);
     NearestInsertion();
+    CheapestInsertion();
+    TwoOpt();
+    ThreeOpt();
 
 
 }
