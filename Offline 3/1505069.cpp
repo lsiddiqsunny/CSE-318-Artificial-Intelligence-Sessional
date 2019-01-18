@@ -28,6 +28,11 @@ Point point[mx];
 int visited[mx];
 vector<Point>tour;
 
+double table[mx][mx];
+int par[mx];
+
+vector<pair<double, pair<int,int> > > edge;
+
 int n;
 
 void Clear()
@@ -77,45 +82,9 @@ int getNearestNeighbor(Point p)
     return pos;
 }
 
-int getNearestNeighborFromAll()
-{
-
-    int pos;
-    double cost=LLONG_MAX;
-    for(int i=1; i<=n; i++)
-    {
-        if(visited[i]==1)
-        {
-            int curpos=getNearestNeighbor(point[i]);
-            if(point[i].dist(point[curpos])<=cost)
-            {
-                cost=point[i].dist(point[curpos]);
-                pos=curpos;
-            }
-        }
-    }
-    return pos;
-}
 
 
-int getNearestArc(int r)
-{
-    double cost=LLONG_MAX;
-    int pos=-1;
 
-    for(int edge=0; edge<tour.size(); edge++)
-    {
-        int i=tour[edge].id;
-        int j=tour[(edge+1)%(tour.size())].id;
-        double nowcost=point[i].dist(point[r])+point[j].dist(point[r])-point[i].dist(point[j]);
-        if(nowcost<=cost)
-        {
-            cost=nowcost;
-            pos=i;
-        }
-    }
-    return pos;
-}
 void NearestNeighbor(bool print)
 {
     Clear();
@@ -137,93 +106,132 @@ void NearestNeighbor(bool print)
 
 
 }
-void NearestInsertion()
+
+void compute_table()
 {
-    Clear();
-    int start=rand()%n+1;
-    tour.push_back(point[start]);
-    visited[start]=1;
-    int Next=getNearestNeighbor(point[start]);
-    tour.push_back(point[Next]);
-    visited[Next]=1;
-    ///start sub tour with two nodes
-    while(tour.size()<n)
+    for(int i=1; i<=n; i++)
     {
-
-        int pos=getNearestNeighborFromAll();
-        ///given sub-tour,find the nearest node from all nodes in the sub-tour
-        // cout<<pos<<endl;
-        visited[pos]=1;
-
-        int id=getNearestArc(pos);
-        ///find the position of the new node
-        tour.push_back(point[pos]);
-        for(int i=tour.size()-2; i>=0; i--)
+        for(int j=1; j<=n; j++)
         {
-            ///positioning the new node
-            if(tour[i]==point[id])
-                break;
-            swap(tour[i],tour[i+1]);
-
-        }
-    }
-    tour.push_back(tour[0]);
-    cout<<"Solution by nearest insertion heuristic:"<<endl;
-
-    PrintSolution();
-
-
-}
-void CheapestInsertion()
-{
-    Clear();
-    int start=rand()%n+1;
-    visited[start]=1;
-    tour.push_back(point[start]);
-    int Next=getNearestNeighbor(point[start]);
-    visited[Next]=1;
-    tour.push_back(point[Next]);
-
-    while(tour.size()<n)
-    {
-        double cost=LLONG_MAX;
-        int x=-1;
-        int z=-1;
-///find the position where insertion is minimum
-        for(int edge=0; edge<tour.size(); edge++)
-        {
-            int xx=tour[edge].id;
-            int yy=tour[(edge+1)%tour.size()].id;
-            for(int node=1; node<=n; node++)
+            if(i==j)
             {
-                if(visited[node]==1)
-                    continue;
-                double dist=point[xx].dist(point[node])+point[yy].dist(point[node])-point[xx].dist(point[yy]);
-                if(dist<=cost)
-                {
-                    cost=dist;
-                    x=xx;
-                    z=node;
-                }
+                table[i][j]=INT_MAX;
+                continue;
 
             }
-        }
-        tour.push_back(point[z]);
-        visited[z]=1;
-
-        for(int i=tour.size()-2; i>=0; i--)
-        {
-            ///positioning the new node
-            if(tour[i]==point[x])
-                break;
-            swap(tour[i],tour[i+1]);
+            table[i][j]=point[i].dist(point[j]);
         }
     }
-    tour.push_back(tour[0]);
-    cout<<"Solution by cheapest insertion heuristic:"<<endl;
+    for(int i=1; i<=n; i++)
+    {
+        for(int j=1; j<=n; j++)
+        {
+            //  cout<<table[i][j]<<" ";
+        }
+        //cout<<endl;
+    }
 
-    PrintSolution();
 }
+void compute_edge(int start)
+{
+    for(int i=1; i<=n; i++)
+    {
+        for(int j=1; j<=n; j++)
+        {
+            if(i==j || i==start || j==start)
+            {
+                continue;
+            }
+            double cost=table[i][start]+table[j][start]-table[i][j];
+            edge.push_back(make_pair(cost,make_pair(i,j)));
+
+        }
+    }
+    sort(edge.rbegin(),edge.rend());
+    for(int i=0; i<edge.size(); i++)
+    {
+        //cout<<edge[i].first<<" "<<edge[i].second.first<<" "<<edge[i].second.second<<endl;
+    }
+
+}
+int compute_next(int now)
+{
+//cout<<now<<endl;
+    for(int i=0; i<edge.size(); i++)
+    {
+        //cout<<now<<" "<<edge[i].second.first<<" "<<edge[i].second.second<<endl;
+
+
+        if(edge[i].second.first==now and !visited[edge[i].second.second])
+        {
+            return edge[i].second.second;
+
+        }
+        else if(edge[i].second.second==now and !visited[edge[i].second.first])
+            return edge[i].second.first;
+
+    }
+
+}
+
+void Saving(int print=1)
+{
+    compute_table();
+    Clear();
+
+
+    int start=rand()%n+1;
+    visited[start]=1;
+    par[start]=-1;
+    compute_edge(start);
+    int nodes=3;
+    int x=edge[0].second.first;
+    int y=edge[0].second.second;
+    par[x]=y;
+    par[y]=start;
+    visited[x]=1;
+    visited[y]=1;
+    int last=x;
+    while(nodes<n)
+    {
+        // cout<<x<<" "<<y<<endl;
+        int x1=compute_next(x);
+        visited[x1]=1;
+        par[x1]=x;
+        last=x1;
+        int y1=compute_next(y);
+        par[y]=y1;
+        par[y1]=start;
+        visited[y1]=1;
+        nodes++;
+        if(nodes==n)
+        {
+
+            break;
+        }
+        nodes++;
+        x=x1;
+        y=y1;
+
+
+
+    }
+    int p=last;
+    while(p!=-1)
+    {
+        if(p!=0)
+            tour.push_back(point[p]);
+        p=par[p];
+    }
+    tour.push_back(tour[0]);
+
+    if(print)
+    {
+        cout<<"Solution by saving heuristic:"<<endl;
+        PrintSolution();
+    }
+}
+
 
 void TwoOpt()
 {
@@ -239,8 +247,8 @@ void TwoOpt()
         {
             for(int j=i+2; j<tour.size()-1; j++)
             {
-                ///reverse from i to k-1;
-                reverse(tour.begin()+i+1,tour.begin()+j+1);
+                ///reverse from i+1 to k-1;
+                reverse(tour.begin()+i+1,tour.begin()+j-1);
                 double nowcost=getTourCost();
                 if(nowcost<cost)
                 {
@@ -248,7 +256,7 @@ void TwoOpt()
                     break;
                 }
                 ///reverse again to fix the change
-                reverse(tour.begin()+i+1,tour.begin()+j+1);
+                reverse(tour.begin()+i+1,tour.begin()+j-1);
             }
             if(isChanged)
                 break;
@@ -262,109 +270,20 @@ void TwoOpt()
 
 
 
-
-
-vector<Point> Operation(int i,int j,int k,int mask)
-{
-    bool Swap=mask&1;             //bit - 0
-    bool Reverse1=(mask>>1)&1;    //bit - 1
-    bool Reverse2=(mask>>2)&1;    //bit - 2
-
-    vector<Point>Now;
-    if(Reverse1)
-        reverse(tour.begin()+i+1,tour.begin()+j+1);
-    if(Reverse2)
-        reverse(tour.begin()+j+1,tour.begin()+k+1);
-
-    for(int x=0; x<=i; x++)
-        Now.push_back(tour[x]);
-    if(!Swap)
-    {
-        for(int x=i+1; x<=j; x++)
-            Now.push_back(tour[x]);
-        for(int x=j+1; x<=k; x++)
-            Now.push_back(tour[x]);
-    }
-    else
-    {
-        for(int x=j+1; x<=k; x++)
-            Now.push_back(tour[x]);
-        for(int x=i+1; x<=j; x++)
-            Now.push_back(tour[x]);
-    }
-    for(int x=k+1; x<n; x++)
-        Now.push_back(tour[x]);
-
-    if(Reverse1)
-        reverse(tour.begin()+i+1,tour.begin()+j+1);
-    if(Reverse2)
-        reverse(tour.begin()+j+1,tour.begin()+k+1);
-    Now.push_back(Now[0]);
-    return Now;
-}
-
-void ThreeOpt()
-{
-    Clear();
-
-    NearestNeighbor(1);
-    while(true)
-    {
-        double cost=getTourCost();
-        //cout<<cost<<endl;
-        bool isChanged=false;
-
-        for(int i=0; i<tour.size()-1; i++)
-        {
-            for(int j=i+2; j<tour.size()-1; j++)
-            {
-                for(int k=j+2; k<tour.size()-1; k++)
-                {
-                    for(int mask=1; mask<8; mask++)
-                    {
-                        vector<Point>Now=Operation(i,j,k,mask);
-                        double nowcost=0.0;
-                        for(int l=0; l<Now.size()-1; l++)
-                        {
-                            nowcost+=Now[l].dist(Now[l+1]);
-                        }
-                        if(nowcost<cost)
-                        {
-                            isChanged=true;
-                            tour=Now;
-                            break;
-                        }
-                    }
-                    if(isChanged)
-                        break;
-                }
-                if(isChanged)
-                    break;
-            }
-        }
-        if(!isChanged)
-            break;
-    }
-    cout<<"Improved solution by 3-opt heuristic:"<<endl;
-
-    PrintSolution();
-}
-
 void solution()
 {
     NearestNeighbor(1);
-    NearestInsertion();
-    CheapestInsertion();
+    Saving();
     TwoOpt();
-    ThreeOpt();
+
 
 
 }
 
 int main()
 {
-    freopen("input.txt","r",stdin);
-    freopen("output.txt", "w", stdout);
+    freopen("burma14.tsp","r",stdin);
+    freopen("outputburma.txt", "w", stdout);
     srand (time(NULL));
 
     cin>>n;
