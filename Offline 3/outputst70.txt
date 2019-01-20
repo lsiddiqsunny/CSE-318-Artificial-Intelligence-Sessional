@@ -1,0 +1,40 @@
+Task 1:
+
+
+Nearest Neighbor Heuristic for pr76 : 
+Avg. case : 817.9
+Best case : 796.659
+Worst case : 849.394
+
+Saving Heuristic for pr76 : 
+Avg. case : 76838.5
+Best case : 76707
+Worst case : 77028
+
+Task 2:
+
+
+Randomized Nearest Neighbor Heuristic for pr76 : 
+Avg. case : 1647.4
+Best case : 1503.12
+Worst case : 1776.13
+
+Randomized Saving Heuristic for pr76 : 
+Avg. case : 76851.8
+Best case : 76782
+Worst case : 77023.5
+
+Task 3:
+
+
+Best two opt for pr76 : 
+Avg. case : 28748.9
+Best case : 730.534
+Worst case : 56831.1
+Parentage : 4259.09
+
+First two opt for pr76 : 
+Avg. case : 39012.1
+Best case : 796.657
+Worst case : 76728.5
+Parentage : 5779.57
