@@ -4,6 +4,8 @@ using namespace std;
 int turn;
 int addmove1,addmove2;
 int aqu1,aqu2;
+int randon=1;
+int h1,h2;
 
 struct Board
 {
@@ -183,7 +185,7 @@ struct Board
                     else if(stone==0 and b[0][i+1]==0)
                     {
                         b[0][0]+=b[1][i+1];
-                        aqu1+=b[1][i+1];
+                        aqu2+=b[1][i+1];
                         b[1][i+1]=0;
                         break;
                     }
@@ -205,7 +207,7 @@ struct Board
     }
     void Print()
     {
-        printf("\n--------------------------------------------------\n");
+        printf("\n-----------------------------------------------------------\n");
         printf("%d",b[0][0]);
         for(int i=1; i<=6; i++)
         {
@@ -217,7 +219,7 @@ struct Board
             printf("\t%d",b[1][i]);
         }
         printf("\t%d",b[1][7]);
-        printf("\n--------------------------------------------------\n");
+        printf("\n-----------------------------------------------------------\n");
 
     }
     int getPos()
@@ -259,10 +261,221 @@ struct Board
             b[0][i]=b[1][i]=0;
         }
     }
+    int hueristic1()
+    {
+        if(turn==1)
+        {
+            return b[1][7]-b[0][0];
+        }
+        else
+            return b[0][0]-b[1][7];
+    }
+    int hueristic2()
+    {
+        return  50*(b[1][7]-b[0][0])+ 100*(b[0][0]-b[1][7]);
+
+    }
+    int hueristic3()
+    {
+        int val= 50*(b[1][7]-b[0][0])+ 100*(b[0][0]-b[1][7]);
+        if(turn==1)
+        {
+            val+=addmove1;
+        }
+        else
+            val+=addmove2;
+        return val;
+    }
+    int hueristic4()
+    {
+        int val= 50*(b[1][7]-b[0][0])+ 100*(b[0][0]-b[1][7]);
+        if(turn==1)
+        {
+            val+=150*addmove1;
+        }
+        else
+            val+=150*addmove2;
+        if(turn==1)
+        {
+            val+=200*aqu1;
+        }
+        else
+            val+=200*aqu2;
+
+        return val;
+    }
+
 
 } Mancala;
 
+int getheuval(int val,Board board)
+{
+    if(val==1)
+    {
+        val=board.hueristic1();
+    }
+    else if(val==2)
+    {
+        val=board.hueristic2();
+    }
+    else if(val==3)
+    {
+        val=board.hueristic3();
+    }
+    else
+    {
+        val=board.hueristic4();
+    }
+    return val;
+}
 
+pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co)
+{
+
+
+
+    if(board.getPos()==-1)
+    {
+        turn =player;
+        int val;
+        if(randon)
+        {
+            val=rand()%4+1;
+            val =getheuval(val,board);
+
+        }
+        else
+        {
+
+            if(turn==1)
+            {
+                val=getheuval(h1,board);
+
+            }
+            else
+                val=getheuval(h2,board);
+
+        }
+        return make_pair(val,-1);
+
+    }
+    if(co>=20)
+    {
+        turn =player;
+        int val;
+        if(randon)
+        {
+            val=rand()%4+1;
+            val =getheuval(val,board);
+
+        }
+        else
+        {
+
+            if(turn==1)
+            {
+                val=getheuval(h1,board);
+
+            }
+            else
+                val=getheuval(h2,board);
+
+        }
+        return make_pair(val,-1);
+    }
+
+    if(player)
+    {
+        int Max=INT_MIN;
+        int pos=-1;
+
+        for(int i=1; i<=6; i++)
+        {
+            if(board.b[1][i]!=0)
+            {
+
+
+                int x[2][8];
+                for(int j=0; j<2; j++)
+                {
+                    for(int k=0; k<8; k++)
+                    {
+                        x[j][k]=board.b[j][k];
+                    }
+                }
+                turn=player;
+                board.play(i);
+
+                int val = MiniMax(board, !player, Alpha, Beta,++co).first;
+                for(int j=0; j<2; j++)
+                {
+                    for(int k=0; k<8; k++)
+                    {
+                        board.b[j][k]=x[j][k];
+                    }
+                }
+                if(Max<val)
+                {
+                    Max=max(Max,val);
+                    pos=i;
+                }
+
+                Alpha=max(Alpha, Max);
+                if(Beta<=Alpha)
+                    break;
+            }
+            if(Beta<=Alpha)
+                break;
+        }
+        return make_pair(Max,pos);
+    }
+    else
+    {
+        int Min=INT_MAX;
+        int pos=-1;
+        for(int i=1; i<=6; i++)
+        {
+
+            if(board.b[0][i]!=0)
+            {
+
+                int x[2][8];
+                for(int j=0; j<2; j++)
+                {
+                    for(int k=0; k<8; k++)
+                    {
+                        x[j][k]=board.b[j][k];
+                    }
+                }
+                turn=player;
+                board.play(i);
+
+                int val = MiniMax(board, !player, Alpha, Beta,++co).first;
+                for(int j=0; j<2; j++)
+                {
+                    for(int k=0; k<8; k++)
+                    {
+                        board.b[j][k]=x[j][k];
+                    }
+                }
+                if(Min>val)
+                {
+                    Min=min(Min,val);
+                    pos=i;
+                }
+
+                Beta=min(Beta, Min);
+                if(Beta<=Alpha)
+                    break;
+            }
+
+            if(Beta<=Alpha)
+                break;
+        }
+        return make_pair(Min,pos);
+    }
+
+}
 
 
 
@@ -274,33 +487,50 @@ int main()
     //  Mancala.play(6);
     // cout<<turn<<endl;
     // Mancala.Print();
+    printf("Choose heuristic randomly? 0. No 1. Yes\n");
+    scanf("%d",&randon);
+    if(!randon){
+        printf("Choose heuristic for player 1 : (input 1-4) ");
+        scanf("%d",&h1);;
+        printf("Choose heuristic for player 2 : (input 1-4) ");
+        scanf("%d",&h2);;
+
+    }
     while(true)
     {
+        //cout<<"here"<<endl;
         if(turn==1)
         {
-            printf("Now turn from the player 1 \n");
-            int pos=Mancala.getPos();
+            printf("Turn from the player 1 \n");
+            int x=turn;
+            int pos=MiniMax(Mancala,turn,INT_MIN,INT_MAX,0).second;
             if(pos==-1)
             {
-                printf("No position to play!\n");
+                printf("No position to play!\n\n");
                 Mancala.Finish();
                 printf("Game finished.\n");
                 printf("Board situation : ");
                 Mancala.Print();
                 break;
             }
+
+
+
             printf("Player 1 played for the position : %d\n",pos);
+            turn=x;
             Mancala.play(pos);
             Mancala.Print();
 
         }
         else
         {
-            printf("Now turn from the player 2 \n");
-            int pos=Mancala.getPos();
+            printf("Turn from the player 2 \n");
+            int x=turn;
+            int pos=MiniMax(Mancala,turn,INT_MIN,INT_MAX,0).second;
+
             if(pos==-1)
             {
-                printf("No position to play!\n");
+                printf("No position to play!\n\n");
                 Mancala.Finish();
                 printf("Game finished.\n");
                 printf("Board situation : ");
@@ -308,6 +538,7 @@ int main()
                 break;
             }
             printf("Player 2 played for the position : %d\n",pos);
+            turn=x;
             Mancala.play(pos);
             Mancala.Print();
 
