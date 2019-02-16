@@ -2,9 +2,7 @@
 using namespace std;
 
 int turn;
-int addmove1,addmove2;
-int aqu1,aqu2;
-int randon=1;
+int random=1;
 int h1,h2;
 
 struct Board
@@ -17,10 +15,10 @@ struct Board
             b[1][i]=b[0][i]=4;
 
         }
-        b[0][7]=b[1][7]=0;
+        b[0][0]=b[1][7]=0;
 
     }
-    void play(int pos)
+    vector<int> play(int pos,int addmove1,int addmove2,int aqu1,int aqu2)
     {
         ///  int aqu=0;
         if(turn==1)
@@ -202,7 +200,12 @@ struct Board
 
         }
 
-
+vector<int>v;
+v.push_back(addmove1);
+v.push_back(addmove2);
+v.push_back(aqu1);
+v.push_back(aqu2);
+return v;
 
     }
     void Print()
@@ -275,7 +278,7 @@ struct Board
         return  50*(b[1][7]-b[0][0])+ 100*(b[0][0]-b[1][7]);
 
     }
-    int hueristic3()
+    int hueristic3(int addmove1,int addmove2,int aqu1,int aqu2)
     {
         int val= 50*(b[1][7]-b[0][0])+ 100*(b[0][0]-b[1][7]);
         if(turn==1)
@@ -286,7 +289,7 @@ struct Board
             val+=addmove2;
         return val;
     }
-    int hueristic4()
+    int hueristic4(int addmove1,int addmove2,int aqu1,int aqu2)
     {
         int val= 50*(b[1][7]-b[0][0])+ 100*(b[0][0]-b[1][7]);
         if(turn==1)
@@ -308,7 +311,7 @@ struct Board
 
 } Mancala;
 
-int getheuval(int val,Board board)
+int getheuval(int val,Board board,int addmove1,int addmove2,int aqu1,int aqu2)
 {
     if(val==1)
     {
@@ -320,16 +323,16 @@ int getheuval(int val,Board board)
     }
     else if(val==3)
     {
-        val=board.hueristic3();
+        val=board.hueristic3(addmove1,addmove2,aqu1,aqu2);
     }
     else
     {
-        val=board.hueristic4();
+        val=board.hueristic4(addmove1,addmove2,aqu1,aqu2);
     }
     return val;
 }
 
-pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co)
+pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co,int addmove1,int addmove2,int aqu1,int aqu2)
 {
 
 
@@ -338,10 +341,10 @@ pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co)
     {
         turn =player;
         int val;
-        if(randon)
+        if(random)
         {
             val=rand()%4+1;
-            val =getheuval(val,board);
+            val =getheuval(val,board,addmove1,addmove2,aqu1,aqu2);
 
         }
         else
@@ -349,11 +352,11 @@ pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co)
 
             if(turn==1)
             {
-                val=getheuval(h1,board);
+                val=getheuval(h1,board,addmove1,addmove2,aqu1,aqu2);
 
             }
             else
-                val=getheuval(h2,board);
+                val=getheuval(h2,board,addmove1,addmove2,aqu1,aqu2);
 
         }
         return make_pair(val,-1);
@@ -363,10 +366,10 @@ pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co)
     {
         turn =player;
         int val;
-        if(randon)
+        if(random)
         {
             val=rand()%4+1;
-            val =getheuval(val,board);
+            val =getheuval(val,board,addmove1,addmove2,aqu1,aqu2);
 
         }
         else
@@ -374,11 +377,11 @@ pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co)
 
             if(turn==1)
             {
-                val=getheuval(h1,board);
+                val=getheuval(h1,board,addmove1,addmove2,aqu1,aqu2);
 
             }
             else
-                val=getheuval(h2,board);
+                val=getheuval(h2,board,addmove1,addmove2,aqu1,aqu2);
 
         }
         return make_pair(val,-1);
@@ -404,9 +407,20 @@ pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co)
                     }
                 }
                 turn=player;
-                board.play(i);
+                vector<int>v=board.play(i,addmove1,addmove2,aqu1,aqu2);
+                addmove1=v[0];
+                addmove2=v[1];
+                aqu1=v[2];
+                aqu2=v[3];
 
-                int val = MiniMax(board, !player, Alpha, Beta,++co).first;
+                int val;
+                if(turn!=player)
+                    val= MiniMax(board, !player, Alpha, Beta,++co,addmove1,addmove2,aqu1,aqu2).first;
+                else
+                {
+                    val= MiniMax(board, player, Alpha, Beta,++co,addmove1,addmove2,aqu1,aqu2).first;
+
+                }
                 for(int j=0; j<2; j++)
                 {
                     for(int k=0; k<8; k++)
@@ -448,9 +462,21 @@ pair<int,int> MiniMax(Board board,bool player,int Alpha,int Beta,int co)
                     }
                 }
                 turn=player;
-                board.play(i);
+                vector<int>v=board.play(i,addmove1,addmove2,aqu1,aqu2);
+                addmove1=v[0];
+                addmove2=v[1];
+                aqu1=v[2];
+                aqu2=v[3];
 
-                int val = MiniMax(board, !player, Alpha, Beta,++co).first;
+
+                int val;
+                if(turn!=player)
+                    val= MiniMax(board, !player, Alpha, Beta,++co,addmove1,addmove2,aqu1,aqu2).first;
+                else
+                {
+                    val= MiniMax(board, player, Alpha, Beta,++co,addmove1,addmove2,aqu1,aqu2).first;
+
+                }
                 for(int j=0; j<2; j++)
                 {
                     for(int k=0; k<8; k++)
@@ -488,14 +514,16 @@ int main()
     // cout<<turn<<endl;
     // Mancala.Print();
     printf("Choose heuristic randomly? 0. No 1. Yes\n");
-    scanf("%d",&randon);
-    if(!randon){
+    scanf("%d",&random);
+    if(!random)
+    {
         printf("Choose heuristic for player 1 : (input 1-4) ");
         scanf("%d",&h1);;
         printf("Choose heuristic for player 2 : (input 1-4) ");
         scanf("%d",&h2);;
 
     }
+    int addmove1=0, addmove2=0, aqu1=0,aqu2=0;
     while(true)
     {
         //cout<<"here"<<endl;
@@ -503,7 +531,10 @@ int main()
         {
             printf("Turn from the player 1 \n");
             int x=turn;
-            int pos=MiniMax(Mancala,turn,INT_MIN,INT_MAX,0).second;
+
+          //  addmove1=addmove2=aqu1=aqu2=0;
+            int pos=MiniMax(Mancala,turn,INT_MIN,INT_MAX,0,addmove1,addmove2,aqu1,aqu2).second;
+
             if(pos==-1)
             {
                 printf("No position to play!\n\n");
@@ -518,7 +549,7 @@ int main()
 
             printf("Player 1 played for the position : %d\n",pos);
             turn=x;
-            Mancala.play(pos);
+            Mancala.play(pos,addmove1,addmove2,aqu1,aqu2);
             Mancala.Print();
 
         }
@@ -526,7 +557,9 @@ int main()
         {
             printf("Turn from the player 2 \n");
             int x=turn;
-            int pos=MiniMax(Mancala,turn,INT_MIN,INT_MAX,0).second;
+
+            //addmove1=addmove2=aqu1=aqu2=0;
+            int pos=MiniMax(Mancala,turn,INT_MIN,INT_MAX,0,addmove1,addmove2,aqu1,aqu2).second;
 
             if(pos==-1)
             {
@@ -539,7 +572,7 @@ int main()
             }
             printf("Player 2 played for the position : %d\n",pos);
             turn=x;
-            Mancala.play(pos);
+            Mancala.play(pos,addmove1,addmove2,aqu1,aqu2);
             Mancala.Print();
 
         }
